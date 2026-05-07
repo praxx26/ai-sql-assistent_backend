@@ -40,3 +40,18 @@ def delete_study_history():
     conn.commit()
     cursor.close()
     conn.close()
+
+def delete_single_study_history(history_id):
+
+    conn = get_history_connection()
+
+    cursor = conn.cursor()
+
+    query = "DELETE FROM study_history WHERE id = %s"
+
+    cursor.execute(query, (history_id,))
+    conn.commit()
+
+    cursor.close()
+
+    conn.close()

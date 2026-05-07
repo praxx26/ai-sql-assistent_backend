@@ -49,3 +49,19 @@ def delete_execute_history():
     conn.commit()
     cursor.close()
     conn.close()
+
+def delete_single_execute_history(history_id):
+
+    conn = get_history_connection()
+
+    cursor = conn.cursor()
+
+    query = "DELETE FROM execute_history WHERE id = %s"
+
+    cursor.execute(query, (history_id,))
+
+    conn.commit()
+
+    cursor.close()
+
+    conn.close()

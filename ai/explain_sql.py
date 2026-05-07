@@ -1,5 +1,5 @@
 from openai import OpenAI as ai
-from dotenv import load_dotenv 
+from dotenv import load_dotenv
 import os
 
 load_dotenv()
@@ -9,32 +9,66 @@ client = ai(
     base_url="https://api.groq.com/openai/v1"
 )
 
-def explain_sql(sql_query):
-    prompt= f"""
-    You are an SQL expert.
 
-    Explain the following SQL query in simple English.
+def explain_sql(sql_query, mode="database"):
 
-    SQL Query:
-    {sql_query}
+    if mode == "study":
 
-    Rules:
-    -if they provide with DB give the exlanation in 3 to 4 lines 
-    - if the user does not provide db give me the clear eplanation about each line and each word why we used like that 
-    - Keep it concise
-    - Beginner friendly
-    - Focus only on what the query does
-    - Keep explanation beginner friendly
-    - Do not generate SQL
-    """
+        prompt = f"""
+        You are an expert SQL teacher.
 
-    response=client.chat.completions.create(
+        Explain the following SQL query in a detailed beginner-friendly way.
+
+        SQL Query:
+        {sql_query}
+
+        Rules:
+- Explain ONLY the SQL clauses present in the query
+- Do not explain unnecessary SQL keywords
+- Explain the query line by line
+- Explain each keyword separately only if it exists in the query
+- For each line explain:
+  - what it does
+  - why it is used
+  - what output it affects
+- Use simple beginner-friendly English
+- Keep explanations clean and structured
+- Use numbered points
+- Put each point on a new line
+- Explain symbols like * only if present
+- Explain WHERE, GROUP BY, ORDER BY, JOIN, LIMIT only if present
+- Do not explain concepts not used in the query
+- Keep explanation practical and concise
+- Add a short final summary of what the query does
+- Do not generate SQL
+- Do not use markdown
+        """
+
+    else:
+
+        prompt = f"""
+        You are an SQL expert.
+
+        Explain the following SQL query briefly.
+
+        SQL Query:
+        {sql_query}
+
+        Rules:
+        - Keep explanation concise
+        - Keep it between 3 to 5 lines
+        - Beginner friendly
+        - Focus only on what the query does
+        - Do not generate SQL
+        """
+
+    response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         temperature=0,
         messages=[
             {
-                "role":"user",
-                "content":prompt
+                "role": "user",
+                "content": prompt
             }
         ]
     )

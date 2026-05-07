@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from models.request_model import QueryRequest
 from database.connection import create_connection
 from database.schemareader import get_schema
@@ -11,23 +12,31 @@ import time
 from history.study_history import (
     save_study_history,
     get_study_history,
-    delete_study_history
+    delete_study_history,
+    delete_single_study_history
 )
 
 from history.execute_history import (
     save_execute_history,
     get_execute_history,
-    delete_execute_history
+    delete_execute_history,
+    delete_single_execute_history
 )
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 @app.post("/generate-and-execute")
 def generate_query(
-    request: QueryRequest,
-    limit: int = 10,
-    page: int = 1
+    request: QueryRequest
 ):
 
     try:
@@ -41,21 +50,38 @@ def generate_query(
         )
 
         schema = get_schema(conn)
+
         sql_query = generate_sql(schema, request.question)
-        dangerous_keywords = ["DROP", "DELETE", "TRUNCATE", "ALTER"]
+
+        dangerous_keywords = [
+            "DROP",
+            "DELETE",
+            "TRUNCATE",
+            "ALTER",
+            "UPDATE",
+            "INSERT"
+        ]
+
         for keyword in dangerous_keywords:
+
             if keyword in sql_query.upper():
+
                 return {
                     "error": f"{keyword} queries are not allowed"
                 }
-        offset = (page - 1) * limit
-        sql_query += f" LIMIT {limit} OFFSET {offset}"
+
         start_time = time.time()
+
         results = execute_query(conn, sql_query)
+
         end_time = time.time()
+
         execution_time = round(end_time - start_time, 4)
-        explanation = explain_sql(sql_query)
+
+        explanation = explain_sql(sql_query, "database")
+
         explanation = explanation.replace('"', '')
+
         clean_sql = " ".join(sql_query.split())
 
         save_execute_history(
@@ -66,13 +92,14 @@ def generate_query(
             results
         )
 
+        conn.close()
+
         return {
             "question": request.question,
             "sql_query": clean_sql,
             "explanation": explanation,
             "results": results,
-            "page": page,
-            "limit": limit,
+            "rows_returned": len(results),
             "execution_time_seconds": execution_time
         }
 
@@ -87,31 +114,39 @@ def generate_query(
 def study_sql(request: StudyQueryRequest):
 
     try:
+
         sql_query = generate_study_sql(request.question)
-        explanation = explain_sql(sql_query)
+
+        explanation = explain_sql(sql_query, "study")
+
         explanation = explanation.replace('"', '')
+
         clean_sql = " ".join(sql_query.split())
+
         save_study_history(
             request.question,
             clean_sql,
             explanation
         )
+
         return {
-            "question":request.question,
-            "sql_query":clean_sql,
-            "explanation":explanation
+            "question": request.question,
+            "sql_query": clean_sql,
+            "explanation": explanation
         }
 
     except Exception as e:
 
         return {
-            "error":str(e)
+            "error": str(e)
         }
 
 
 @app.get("/study-history")
 def study_history_api():
+
     history = get_study_history()
+
     return {
         "total": len(history),
         "history": history
@@ -120,7 +155,9 @@ def study_history_api():
 
 @app.get("/execute-history")
 def execute_history_api():
+
     history = get_execute_history()
+
     return {
         "total": len(history),
         "history": history
@@ -129,7 +166,9 @@ def execute_history_api():
 
 @app.delete("/delete-study-history")
 def delete_study_history_api():
+
     delete_study_history()
+
     return {
         "message": "Study history deleted successfully"
     }
@@ -137,7 +176,29 @@ def delete_study_history_api():
 
 @app.delete("/delete-execute-history")
 def delete_execute_history_api():
+
     delete_execute_history()
+
+    return {
+        "message": "Execute history deleted successfully"
+    }
+
+
+@app.delete("/delete-single-study-history/{history_id}")
+def delete_single_study_history_api(history_id: int):
+
+    delete_single_study_history(history_id)
+
+    return {
+        "message": "Study history deleted successfully"
+    }
+
+
+@app.delete("/delete-single-execute-history/{history_id}")
+def delete_single_execute_history_api(history_id: int):
+
+    delete_single_execute_history(history_id)
+
     return {
         "message": "Execute history deleted successfully"
     }
