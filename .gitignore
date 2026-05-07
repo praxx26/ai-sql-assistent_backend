@@ -1,0 +1,25 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Virtual environment
+Include/
+Lib/
+Scripts/
+pyvenv.cfg
+
+# Environment variables
+.env
+
+# SSL Certificates / Keys
+*.pem
+*.key
+cert.pem
+key.pem
+
+# VS Code
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
