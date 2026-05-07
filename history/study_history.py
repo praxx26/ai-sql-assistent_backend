@@ -1,22 +1,31 @@
 from database.history_connection import get_history_connection
 
 
-def save_study_history(question, sql_query, explanation):
+def save_study_history(title, question, sql_query, explanation):
+
     conn = get_history_connection()
+
     cursor = conn.cursor()
+
     query = """
     INSERT INTO study_history
-    (question, sql_query, explanation)
-    VALUES (%s, %s, %s)
+    (title, question, sql_query, explanation)
+    VALUES (%s, %s, %s, %s)
     """
+
     values = (
+        title,
         question,
         sql_query,
         explanation
     )
+
     cursor.execute(query, values)
+
     conn.commit()
+
     cursor.close()
+
     conn.close()
 
 def get_study_history():

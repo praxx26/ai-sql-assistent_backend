@@ -8,6 +8,7 @@ from database.executer import execute_query
 from ai.explain_sql import explain_sql
 from models.study_model import StudyQueryRequest
 import time
+from ai.history_title import generate_history_title
 
 from history.study_history import (
     save_study_history,
@@ -84,7 +85,9 @@ def generate_query(
 
         clean_sql = " ".join(sql_query.split())
 
+        title = generate_history_title(request.question)
         save_execute_history(
+            title,
             request.database,
             request.question,
             clean_sql,
@@ -122,8 +125,9 @@ def study_sql(request: StudyQueryRequest):
         explanation = explanation.replace('"', '')
 
         clean_sql = " ".join(sql_query.split())
-
+        title = generate_history_title(request.question)
         save_study_history(
+            title,
             request.question,
             clean_sql,
             explanation

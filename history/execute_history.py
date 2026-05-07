@@ -3,31 +3,47 @@ import json
 
 
 def save_execute_history(
-    database_name,
+    title,
+    database,
     question,
     sql_query,
     explanation,
     results
-    ):
+):
+
     conn = get_history_connection()
+
     cursor = conn.cursor()
+
     query = """
     INSERT INTO execute_history
-    (database_name, question, sql_query, explanation, results)
-    VALUES (%s, %s, %s, %s, %s)
-    """
-    values = (
+    (
+        title,
         database_name,
         question,
         sql_query,
         explanation,
-        json.dumps(results)
+        results
     )
-    cursor.execute(query, values)
-    conn.commit()
-    cursor.close()
-    conn.close()
+    VALUES (%s, %s, %s, %s, %s, %s)
+    """
 
+    values = (
+        title,
+        database,
+        question,
+        sql_query,
+        explanation,
+        str(results)
+    )
+
+    cursor.execute(query, values)
+
+    conn.commit()
+
+    cursor.close()
+
+    conn.close()
 
 def get_execute_history():
     conn = get_history_connection()

@@ -23,13 +23,16 @@ def generate_sql(schema, question):
     {question}
 
     Rules:
-    - Generate only SQL
-    - No explanation
-    - No markdown
-    - Use valid SQL syntax
-    - Do not hallucinate columns
-
-    SQL:
+- Generate only SQL
+- Generate ONLY MySQL compatible SQL
+- Use valid MySQL syntax
+- Use LIMIT instead of TOP
+- Do not use SQL Server syntax
+- Do not use PostgreSQL specific syntax
+- No explanation
+- No markdown
+- Use ONLY provided tables and columns
+- Do not hallucinate columns
     """
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
@@ -57,13 +60,17 @@ def generate_study_sql(question):
     You are an expert SQL generator.
 
     convert the natural language into SQL query.
-
-     Rules:
-    - Generate only SQL
-    - No explanation
-    - No markdown
-    - Use proper table names
-    - Use valid SQL syntax
+Rules:
+- Generate only SQL
+- Generate ONLY MySQL compatible SQL
+- Use valid MySQL syntax
+- Use LIMIT instead of TOP
+- Do not use SQL Server syntax
+- Do not use PostgreSQL specific syntax
+- No explanation
+- No markdown
+- Use ONLY provided tables and columns
+- Do not hallucinate columns
 
     User Question:
     {question}
